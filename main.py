@@ -18,7 +18,7 @@ BLOG_ID = os.getenv('BLOG_ID')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # --- GOOGLE SHEETS LOGGING ---
-def log_to_gsheet(title, post_url, tags):
+def log_to_gsheet(title, post_url, tags, desc, img_url, aff_link):
     try:
         creds_json = os.getenv('G_SHEET_CREDS')
         if not creds_json:
@@ -36,7 +36,8 @@ def log_to_gsheet(title, post_url, tags):
         
         date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        sheet.append_row([date_str, title, post_url, tags])
+        # Order: Date | Title | Post URL | Affiliate Link | Image URL | Description | Tags
+        sheet.append_row([date_str, title, post_url, aff_link, img_url, desc, tags])
         print("📊 Data Logged to Google Sheet Successfully!")
         
     except Exception as e:
@@ -239,7 +240,8 @@ try:
     print(f"✅ SEO Description Added.")
     print(f"🚀 Final Link: {post_url}")
 
-    log_to_gsheet(data_title, post_url, data_tags)
+    # Pass all new fields to the logger
+    log_to_gsheet(data_title, post_url, data_tags, data_desc, data_image, data_link)
     
     with open('topics.txt', 'w', encoding='utf-8') as f:
         f.writelines(remaining_rows)
