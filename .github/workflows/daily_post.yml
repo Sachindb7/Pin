@@ -1,0 +1,49 @@
+name: Cricket Clash Daily Poster
+
+on:
+  schedule:
+    # Subah 10:00 AM IST (which is 04:30 UTC)
+    - cron: '30 4 * * *'
+    # Raat 8:00 PM IST (which is 14:30 UTC)
+    - cron: '30 14 * * *'
+  workflow_dispatch: # Button to run manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: # Important for deleting the topic
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        # 👇 CHANGE 1: 'openpyxl' hataya, 'gspread' aur 'oauth2client' lagaya
+        run: |
+          pip install google-api-python-client google-auth google-genai python-dotenv requests gspread oauth2client
+
+      - name: Run Automation Script
+        env:
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BLOG_ID: ${{ secrets.BLOG_ID }}
+          # 👇 CHANGE 2: Ye naya Secret add kiya hai Google Sheets ke liye
+          G_SHEET_CREDS: ${{ secrets.G_SHEET_CREDS }}
+        run: python main.py
+
+      - name: Commit and Push Changes (Update topics only)
+        # 👇 CHANGE 3: Excel file hata di, kyunki ab data Google Sheet pe hai
+        run: |
+          git config --global user.name 'CricketBot'
+          git config --global user.email 'bot@crickethub.in'
+          git add topics.txt
+          git commit -m "Done posting, removed used topic" || echo "No changes to commit"
+          git push
